@@ -1,12 +1,20 @@
-# Bellabeat Case Study
+# :leaves: Bellabeat Case Study 
+<p>
+    <img align="right" src="https://user-images.githubusercontent.com/70372302/232290447-5323ed5f-6aba-4d2f-916e-a588cb396117.jpg">
+</p>
+
+## About Bellabeat
+
+Bellabeat is a company focused on manufacturing wellness products for women. One of their most popular product is called Leaf which is a wellness tracker. It can track steps, sleep, stress, heartbeat and a lot more. What makes Leaf different from other smart devices is the jewelry-like aesthetic of it. Tracker data can be accessed through the Bellabeat app after connecting the tracker to a smartphone.
 
 ## Business task
 
 Analyzing another brand's smart device usage data in order to improve Bellabeat's future marketing strategies. 
-    >>number of steps/sleep vs number of intensity/sleep
-    
+
+>>number of steps/sleep vs number of intensity/sleep
+
 ## The data
-The data that will be used in this study is called "FitBit Fitness Tracker Data" from Kaggle, made available by Mobius. It was collected through a survey via Amazon's Mechanical Turk. The sample size of the data is not ideal --just 30 eligible FitBit users. Still, it is enough to get an idea on trends surrounding smart device usage. Keeping the business task in mind, out of the 18 files that are present in the data, only 4 of them will be used in this study.
+The data that will be used in this study is called [FitBit Fitness Tracker Data](https://www.kaggle.com/datasets/arashnic/fitbit) from [Kaggle](https://www.kaggle.com/), made available by [Mobius](https://www.kaggle.com/arashnic). It was collected through a survey via Amazon's Mechanical Turk. The sample size of the data is not ideal --just 30 eligible FitBit users. Still, it is enough to get an idea on trends surrounding smart device usage. Keeping the business task in mind, out of the 18 files that are present in the data, only 4 of them will be used in this study.
    
     
 ```{r}
