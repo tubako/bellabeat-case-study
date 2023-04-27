@@ -1,6 +1,8 @@
 ---
 title: "Bellabeat Case Study"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 
@@ -11,12 +13,7 @@ output: html_notebook
 ## The data
     The data that will be used in this study is called "FitBit Fitness Tracker Data" from Kaggle, made available by Mobius. It was collected through a survey via Amazon's Mechanical Turk. The sample size of the data is not ideal --just 30 eligible FitBit users. Still, it is enough to get an idea on trends surrounding smart device usage. Keeping the business task in mind, out of the 18 files that are present in the data, only 4 of them will be used in this study.
     
-```{r}
-daily_activity <- read_csv("Fitabase Data 4.12.16-5.12.16/dailyActivity_merged.csv")
-daily_sleep <- read_csv("Fitabase Data 4.12.16-5.12.16/sleepDay_merged.csv")
-heart_rate <- read_csv("Fitabase Data 4.12.16-5.12.16/heartrate_seconds_merged.csv")
-hourly_steps <- read_csv("Fitabase Data 4.12.16-5.12.16/hourlySteps_merged.csv")
-```
+
 
 
     
@@ -24,14 +21,16 @@ hourly_steps <- read_csv("Fitabase Data 4.12.16-5.12.16/hourlySteps_merged.csv")
     To do this analysis, R programming language seems the easiest and most efficient one to use. Since the data is not too big, but it consists of multiple spreadsheets, any merging or cleaning will be done very quickly through R. In this project, following packages will be used: .... 
     
 ```{r}
-install.packages("tidyverse")
-install.packages("snakecase")
-install.packages("skimr")
 library(tidyverse)
 library(snakecase)
 library(skimr)
 ```
-    
+```{r}
+daily_activity <- read_csv("Fitabase Data 4.12.16-5.12.16/dailyActivity_merged.csv")
+daily_sleep <- read_csv("Fitabase Data 4.12.16-5.12.16/sleepDay_merged.csv")
+heart_rate <- read_csv("Fitabase Data 4.12.16-5.12.16/heartrate_seconds_merged.csv")
+hourly_steps <- read_csv("Fitabase Data 4.12.16-5.12.16/hourlySteps_merged.csv")
+``` 
     
     I will start the cleaning process by checking the metadata, to see if they are spelled or written correctly, if they have any uppercase characters or any disorder in general.
     
@@ -115,46 +114,69 @@ daily_sleep <- daily_sleep %>%  mutate(weekday= weekdays(sleep_day))
 
 ## Analyzing
 
+Questions:
+
+Which days have the least active minutes (to promote activity more on those days)
+Which days have the least amount of sleep on average (to promote sleep more on those days)
+Which activity level is the least popular?
+What hour of the daytime is the least active? ((to increase activity?)
+How often are the heart rates out of ordinary? What can be done to warn the user?
+
+
+```{r}
+weekday <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+ggplot(data=daily_activity, aes(x=weekday))+geom_bar(fill='orange')+ labs(title='Frequency of Weekdays')+scale_x_discrete(limits = weekday)+xlab('Number of' )
+  
+```
+```{r}
+
+ggplot(data=daily_sleep, aes(x=weekday)) + geom_bar(color='purple',fill="pink") +scale_x_discrete(limits = weekday)
+```
+
+
+
 ```{r}
 average_daily_activity <- daily_activity %>%
-  summarise(average_steps = mean(total_steps), average_sedentary_minutes = mean(sedentary_minutes), average_active_minutes = mean(mean(very_active_minutes), mean(fairly_active_minutes), mean(lightly_active_minutes)), average_sedentary_minutes= mean(sedentary_minutes))
+  group_by(id) %>% 
+  summarise(average_sedentary_minutes = mean(sedentary_minutes), average_active_minutes = mean(mean(very_active_minutes), mean(fairly_active_minutes), mean(lightly_active_minutes)), average_sedentary_minutes= mean(sedentary_minutes))
 
 head(average_daily_activity)
 ```
 
 Instead of analyzing every single user individually, the users can be categorized into three different groups based on their average activity. According to [this article](https://pubmed.ncbi.nlm.nih.gov/14715035/), the classification of the users can be done like this:
-* <5000 steps/day, 'sedentary'; 
-* 5000-7499 steps/day, 'low active';
-* 7500-9999 steps/day, 'somewhat active'; 
-* >or=10000 steps/day, 'active';
-* >12500 steps/day, 'highly active'.
+- <5000 steps/day, 'sedentary'; 
+- 5000-7499 steps/day, 'low active';
+- 7500-9999 steps/day, 'somewhat active'; 
+- >or=10000 steps/day, 'active';
+- >12500 steps/day, 'highly active'.
 
 
 ```{r}
 user_type <- daily_activity %>% 
   group_by (id) %>% 
-  summarise(average_daily_steps= mean(totalsteps)) %>% 
+  summarise(average_steps= mean(total_steps)) %>% 
   
   mutate(user_type= case_when(
     average_steps < 5000 ~"sedentary",
     average_steps >= 5000 & average_steps <7499 ~"low active",
     average_steps >= 7499 & average_steps <9999 ~"somewhat active",
-    average_steps >= 10000 ~"active"
+    average_steps >= 10000 & average_steps <12500 ~"active",
     average_steps > 12500 ~"highly active"))
   
 ```
 
+```{r}
+daily_activity <- merge(x= daily_activity, y=user_type, by='id')
+daily_activity <- merge(x= daily_activity, y=average_daily_activity, by='id')
+```
 
 ```{r}
-ggplot(data=daily_activity, aes(x=weekday))+geom_bar(fill='orange')+ labs(title='Frequency of Weekdays')
-  
+activity_level <- c("sedentary", "low active", "somewhat active", "active", "highly active")
+ggplot(data = daily_activity, aes(x = user_type))+geom_bar(color = "purple", fill = "pink") + labs(title = "Activity Levels")+xlab("User Type")+ylab("Number of Users")+scale_x_discrete(limits = activity_level)
 ```
 ```{r}
-ggplot(data=daily_sleep, aes(x=weekday)) + geom_bar(fill="orange")
+
 ```
-```{r}
-percentage <- data.frame(
-  level=c("Sedentary", "Lightly", "Fairly", "Very Active"),
-  minutes=c(sedentary_percentage,lightly_percentage,fairly_percentage,active_percentage)
-)
-```
+
+
+
