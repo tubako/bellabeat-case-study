@@ -24,10 +24,12 @@ hourly_steps <- read_csv("Fitabase Data 4.12.16-5.12.16/hourlySteps_merged.csv")
     To do this analysis, R programming language seems the easiest and most efficient one to use. Since the data is not too big, but it consists of multiple spreadsheets, any merging or cleaning will be done very quickly through R. In this project, following packages will be used: .... 
     
 ```{r}
+install.packages("tidyverse")
+install.packages("snakecase")
+install.packages("skimr")
 library(tidyverse)
 library(snakecase)
 library(skimr)
-
 ```
     
     
@@ -43,10 +45,10 @@ head(hourly_steps)
 Now it would be ideal to confirm how many users are participating, to see if it actually is 30 for all the data sets. For this, checking how many unique ids there are would be enough.
 
 ```{r}
-n_unique(daily_activity$id)
-n_unique(daily_sleep$id)
-n_unique(heart_rate$id)
-n_unique(hourly_steps$id)
+n_unique(daily_activity$Id)
+n_unique(daily_sleep$Id)
+n_unique(heart_rate$Id)
+n_unique(hourly_steps$Id)
 ```
 hourly_steps and daily_activity data sets have sufficient participants. For daily_sleep and heart_rate data sets, participants are less than 30 which is not ideal, however for the sake of this study, these data sets will still be used.
 
@@ -105,21 +107,54 @@ sum(duplicated(daily_sleep))
 
 Okay, daily_sleep data set also only consists of distinct values.  
 
+```{r}
+daily_activity <- daily_activity %>% mutate( weekday = weekdays(activity_date))
+daily_sleep <- daily_sleep %>%  mutate(weekday= weekdays(sleep_day))
+```
+
+
 ## Analyzing
-
-
 
 ```{r}
 average_daily_activity <- daily_activity %>%
-  group_by(id) %>% 
   summarise(average_steps = mean(total_steps), average_sedentary_minutes = mean(sedentary_minutes), average_active_minutes = mean(mean(very_active_minutes), mean(fairly_active_minutes), mean(lightly_active_minutes)), average_sedentary_minutes= mean(sedentary_minutes))
 
 head(average_daily_activity)
 ```
 
+Instead of analyzing every single user individually, the users can be categorized into three different groups based on their average activity. According to [this article](https://pubmed.ncbi.nlm.nih.gov/14715035/), the classification of the users can be done like this:
+* <5000 steps/day, 'sedentary'; 
+* 5000-7499 steps/day, 'low active';
+* 7500-9999 steps/day, 'somewhat active'; 
+* >or=10000 steps/day, 'active';
+* >12500 steps/day, 'highly active'.
+
 
 ```{r}
-ggplot(data = average_daily_activity, aes( = average_sedentary_minutes)) + geom_bar()
+user_type <- daily_activity %>% 
+  group_by (id) %>% 
+  summarise(average_daily_steps= mean(totalsteps)) %>% 
+  
+  mutate(user_type= case_when(
+    average_steps < 5000 ~"sedentary",
+    average_steps >= 5000 & average_steps <7499 ~"low active",
+    average_steps >= 7499 & average_steps <9999 ~"somewhat active",
+    average_steps >= 10000 ~"active"
+    average_steps > 12500 ~"highly active"))
   
 ```
 
+
+```{r}
+ggplot(data=daily_activity, aes(x=weekday))+geom_bar(fill='orange')+ labs(title='Frequency of Weekdays')
+  
+```
+```{r}
+ggplot(data=daily_sleep, aes(x=weekday)) + geom_bar(fill="orange")
+```
+```{r}
+percentage <- data.frame(
+  level=c("Sedentary", "Lightly", "Fairly", "Very Active"),
+  minutes=c(sedentary_percentage,lightly_percentage,fairly_percentage,active_percentage)
+)
+```
